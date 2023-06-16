@@ -28,7 +28,13 @@ def teams():
 @app.route('/teamdetails/<teamId>', methods=['GET'])
 def get_team_details(teamId):
     details = teamdetails.TeamDetails(teamId)
-    return jsonify(details)
+
+    details_dict = {}
+    for i, df in enumerate(details.get_data_frames()):
+        details_dict[f'data_set_{i+1}'] = df.to_dict('records')
+
+    return jsonify(details_dict)
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
