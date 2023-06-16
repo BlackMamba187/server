@@ -42,21 +42,10 @@ def get_team_details(teamId):
 
 @app.route('/commonteamroster/<team_id>/<season>', methods=['GET'])
 def team_roster(team_id, season):
-    max_retries = 3
-    retry_delay = 2  # seconds
+    roster = commonteamroster.CommonTeamRoster(team_id=team_id, season=season)
+    data_sets = roster.get_normalized_dict()
 
-    retries = 0
-    while retries < max_retries:
-        try:
-            roster = commonteamroster.CommonTeamRoster(team_id=team_id, season=season)
-            data_sets = roster.get_normalized_dict()
-            return jsonify(data_sets)
-        except (ReadTimeout, requests.exceptions.RequestException):
-            # Timeout or other network error occurred, retry after delay
-            retries += 1
-            time.sleep(retry_delay * retries)
-
-    return jsonify({'error': 'Failed to fetch team roster'})
+    return jsonify(data_sets)
 
 
 if __name__ == '__main__':
