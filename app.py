@@ -24,8 +24,8 @@ def teams():
     teams = nba_teams.get_teams()
     return jsonify(teams)
 
-@app.route('/team/<teamId>/players', methods=['GET'])
-def get_team_players(teamId):
+@app.route('/activeplayers', methods=['GET'])
+def get_team_players():
     players_active = players.get_active_players()
     return jsonify(players_active)
 
