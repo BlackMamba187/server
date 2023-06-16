@@ -7,10 +7,12 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route('/players', methods=['GET'])
 def get_players():
     player_dict = players.get_players()
     return jsonify(player_dict)
+
 
 @app.route('/team/<teamId>', methods=['GET'])
 def team_profile(teamId):
@@ -20,21 +22,19 @@ def team_profile(teamId):
     else:
         return jsonify({'message': 'Team not found'}), 404
 
+
 @app.route('/teams', methods=['GET'])
 def teams():
     teams = nba_teams.get_teams()
     return jsonify(teams)
 
+
 @app.route('/teamdetails/<teamId>', methods=['GET'])
 def get_team_details(teamId):
-    details = teamdetails.TeamDetails(teamId)
+    details = teamdetails.TeamDetails(team_id=teamId)
 
-    details_dict = {}
-    for i, df in enumerate(details.get_data_frames()):
-        details_dict[f'data_set_{i+1}'] = df.to_dict('records')
+    return jsonify(details)
 
-    return jsonify(details_dict)
-    
 
 if __name__ == '__main__':
     app.run(debug=True)
