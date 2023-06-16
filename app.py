@@ -26,17 +26,8 @@ def teams():
 
 @app.route('/team/<teamId>/players', methods=['GET'])
 def get_team_players(teamId):
-    player_dict = players.get_active_players()
-    team_players = []
-
-    for player in player_dict:
-        player_id = player['id']
-        career = playercareerstats.PlayerCareerStats(player_id=player_id).get_data_frames()[0]
-        # Check if the player played in the latest season and for the required team
-        if not career.empty and str(career['TEAM_ID'].iloc[-1]) == teamId:
-            team_players.append(player)
-
-    return jsonify(team_players)
+    players_active = players.get_active_players()
+    return jsonify(players_active)
 
 if __name__ == '__main__':
     app.run(debug=True)
