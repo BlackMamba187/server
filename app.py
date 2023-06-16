@@ -3,6 +3,9 @@ from nba_api.stats.static import players, teams
 import nba_api.stats.static.teams as nba_teams
 from nba_api.stats.endpoints import teamdetails, commonteamroster
 from flask_cors import CORS
+import requests
+from requests.exceptions import ReadTimeout
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -39,10 +42,21 @@ def get_team_details(teamId):
 
 @app.route('/commonteamroster/<team_id>/<season>', methods=['GET'])
 def team_roster(team_id, season):
-    roster = commonteamroster.CommonTeamRoster(team_id=team_id, season=season)
-    data_sets = roster.get_normalized_dict()
+    max_retries = 3
+    retry_delay = 2  # seconds
 
-    return jsonify(data_sets)
+    retries = 0
+    while retries < max_retries:
+        try:
+            roster = commonteamroster.CommonTeamRoster(team_id=team_id, season=season)
+            data_sets = roster.get_normalized_dict()
+            return jsonify(data_sets)
+        except (ReadTimeout, requests.exceptions.RequestException):
+            # Timeout or other network error occurred, retry after delay
+            retries += 1
+            time.sleep(retry_delay * retries)
+
+    return jsonify({'error': 'Failed to fetch team roster'})
 
 
 if __name__ == '__main__':
