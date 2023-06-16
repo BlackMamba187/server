@@ -25,7 +25,7 @@ def teams():
     teams = nba_teams.get_teams()
     return jsonify(teams)
 
-@app.route('/teamdetails', methods=['GET'])
+@app.route('/teamdetails/<teamId>', methods=['GET'])
 def get_team_details(teamId):
     details = teamdetails.TeamDetails(teamId)
     return jsonify(details)
