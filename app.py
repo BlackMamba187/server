@@ -26,8 +26,8 @@ def teams():
     return jsonify(teams)
 
 @app.route('/teamdetails', methods=['GET'])
-def get_team_details():
-    details = teamdetails.TeamDetails(team_id)
+def get_team_details(teamId):
+    details = teamdetails.TeamDetails(teamId)
     return jsonify(details)
 
 if __name__ == '__main__':
