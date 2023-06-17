@@ -31,7 +31,6 @@ def teams():
 
 @app.route('/commonplayerinfo/<playerId>', methods=['GET'])
 def get_common_player_info(playerId):
-    try:
         info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
         data = info.get_normalized_dict()
         return jsonify(data)
