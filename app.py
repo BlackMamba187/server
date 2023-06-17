@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, make_response, request
 from nba_api.stats.static import players, teams
 import nba_api.stats.static.teams as nba_teams
-from nba_api.stats.endpoints import commonplayerinfo
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -27,13 +26,6 @@ def team_profile(teamId):
 def teams():
     teams = nba_teams.get_teams()
     return jsonify(teams)
-
-
-@app.route('/commonplayerinfo/<playerId>', methods=['GET'])
-def get_common_player_info(playerId):
-        info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
-        data = info.get_normalized_dict()
-        return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)
