@@ -35,13 +35,6 @@ def get_common_player_info(playerId):
         info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
         data = info.get_normalized_dict()
         return jsonify(data)
-    except Exception as e:
-        # Log the error message
-        error_message = str(e)
-        print(error_message)
-        # Include the error message in the response
-        return jsonify({'message': 'An error occurred while processing your request.', 'error': error_message}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
