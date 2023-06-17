@@ -3,8 +3,6 @@ from nba_api.stats.static import players, teams
 import nba_api.stats.static.teams as nba_teams
 from nba_api.stats.endpoints import commonplayerinfo
 from flask_cors import CORS
-import pandas as pd 
-import time
 
 app = Flask(__name__)
 CORS(app)
@@ -33,14 +31,11 @@ def teams():
 
 @app.route('/commonplayerinfo/<playerId>', methods=['GET'])
 def get_common_player_info(playerId):
-    try:
-        info = commonplayerinfo.CommonPlayerInfo(player_id=playerId, timeout=60)  # Increase the timeout value to 60 seconds
+ 
+        info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
         data = info.get_normalized_dict()
         return jsonify(data)
-    except requests.exceptions.ReadTimeout:
-        return jsonify({'message': 'Request timed out'}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
 if __name__ == '__main__':
     app.run(debug=True)
