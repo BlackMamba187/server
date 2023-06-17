@@ -33,11 +33,14 @@ def teams():
 
 @app.route('/commonplayerinfo/<playerId>', methods=['GET'])
 def get_common_player_info(playerId):
-    info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
-    data = info.get_normalized_dict()
-    time.sleep(2)  # Add a delay of 2 seconds
+    try:
+        info = commonplayerinfo.CommonPlayerInfo(player_id=playerId, timeout=60)  # Increase the timeout value to 60 seconds
+        data = info.get_normalized_dict()
+        return jsonify(data)
+    except requests.exceptions.ReadTimeout:
+        return jsonify({'message': 'Request timed out'}), 500
 
-    return jsonify(data)
-
+if __name__ == '__main__':
+    app.run(debug=True)
 if __name__ == '__main__':
     app.run(debug=True)
