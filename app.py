@@ -33,7 +33,6 @@ def teams():
 def get_team_details(teamId):
     details = teamdetails.TeamDetails(team_id=teamId)
     data = details.get_normalized_dict()
-
     return jsonify(data)
 
 
@@ -41,7 +40,6 @@ def get_team_details(teamId):
 def team_roster(team_id, season):
     roster = commonteamroster.CommonTeamRoster(team_id=team_id, season=season)
     data_sets = roster.get_normalized_dict()
-
     return jsonify(data_sets)
 
 
