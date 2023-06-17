@@ -32,14 +32,15 @@ def teams():
 @app.route('/commonplayerinfo/<playerId>', methods=['GET'])
 def get_common_player_info(playerId):
     try:
-        # league_id_nullable is not passed, so it should take its default value (probably None or '')
         info = commonplayerinfo.CommonPlayerInfo(player_id=playerId)
         data = info.get_normalized_dict()
         return jsonify(data)
     except Exception as e:
-        # You can log the error message here to help debug the issue
-        print(str(e))
-        return jsonify({'message': 'An error occurred while processing your request.'}), 500
+        # Log the error message
+        error_message = str(e)
+        print(error_message)
+        # Include the error message in the response
+        return jsonify({'message': 'An error occurred while processing your request.', 'error': error_message}), 500
 
 
 if __name__ == '__main__':
