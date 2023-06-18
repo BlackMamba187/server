@@ -2,12 +2,6 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from nba_api.stats.static import players, teams
 from nba_api.stats.endpoints import commonplayerinfo
-from nba_api import debug  # Import debug from nba_api
-
-import json
-
-# Set the PROXY value
-PROXY = '127.0.0.1:80'  # Replace with your proxy address and port
 
 app = Flask(__name__)
 CORS(app)
