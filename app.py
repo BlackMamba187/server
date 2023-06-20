@@ -8,8 +8,8 @@ app = Flask(__name__)
 CORS(app)
 
 NBA_API_HEADERS = {
-    'Referer': 'https://stats.nba.com',
-    'Origin': 'https://stats.nba.com',
+    'Referer': 'https://nba-server-s0rg.onrender.com',
+    'Origin': 'https://nba-server-s0rg.onrender.com',
     'x-nba-stats-origin': 'stats',
     'x-nba-stats-token': 'true',
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36'
