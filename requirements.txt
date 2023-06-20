@@ -1,3 +1,6 @@
 Flask
+nba_api
+flask_cors
 gunicorn==20.1.0
+pandas
 requests==2.26.0
