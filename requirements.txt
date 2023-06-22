@@ -1,6 +1,6 @@
 Flask
-nba_api
+BeautifulSoup
 flask_cors
+json
 gunicorn==20.1.0
-pandas
 requests==2.26.0
