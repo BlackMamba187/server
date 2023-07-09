@@ -8,6 +8,8 @@ import string
 import time
 
 # get active teams
+
+
 def get_active_teams():
     stats_list = ['lg_id', 'year_min', 'year_max', 'years', 'g', 'wins', 'losses', 'win_loss_pct',
                   'years_playoffs', 'years_division_champion', 'years_conference_champion', 'years_league_champion']
@@ -36,6 +38,8 @@ def get_active_teams():
     return jsonify(active_teams_data)
 
 # get one team info
+
+
 def get_team_info(team_id):
     year = "2023"
     current_url = f'https://www.basketball-reference.com/teams/{team_id}/{year}.html'
@@ -212,6 +216,8 @@ def get_team_info(team_id):
 players_data = {letter: None for letter in string.ascii_lowercase}
 
 # get all players by letter
+
+
 def get_all_players_data(letter):
 
     url = f"https://www.basketball-reference.com/players/{letter}/"
@@ -268,44 +274,95 @@ def get_player_data(player_id):
         img_tag = soup.find('img', {'itemscope': 'image'})
         return img_tag.get('src') if img_tag else None
 
+    def get_and_cleanup_stats_table(soup, table_id, data_stats, cleanup=False):
+        stats_table = get_stats_table(soup, table_id, data_stats)
+        if cleanup:
+            for key in stats_table:
+                if stats_table[key]:
+                    stats_table[key].pop(0)
+        return stats_table
+
     url = f'https://www.basketball-reference.com/players/{player_id[0]}/{player_id}.html'
     soup = fetch_url_content(url)
 
-    data_stats = ["season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp_per_g", "fg_per_g", "fga_per_g", "fg_pct", "fg3_per_g", "fg3a_per_g", "fg3_pct", "fg2_per_g", "fg2a_per_g",
-                  "fg2_pct", "efg_pct", "ft_per_g", "fta_per_g", "ft_pct", "orb_per_g", "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g", "blk_per_g", "tov_per_g", "pf_per_g", "pts_per_g"]
-    data_stats_per_minute = ['season', 'age', "team_id", "lg_id", "pos", "g", "gs", "mp", "fg_per_mp", "fga_per_mp", "fg_pct", "fg3_per_mp", "fg3a_per_mp", "fg3_pct", "fg2_per_mp",
-                             "fg2a_per_mp", "fg2_pct", "ft_per_mp", "fta_per_mp", "ft_pct", "orb_per_mp", "drb_per_mp", "trb_per_mp", "ast_per_mp", "stl_per_mp", "blk_per_mp", "tov_per_mp", "pf_per_mp", "pts_per_mp"]
-    data_stats_per_poss = ["season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp", "fg_per_poss", "fga_per_poss", "fg_pct", "fg3_per_poss", "fg3a_per_poss", "fg3_pct", "fg2_per_poss", "fg2a_per_poss", "fg2_pct",
-                           "ft_per_poss", "fta_per_poss", "ft_pct", "orb_per_poss", "drb_per_poss", "trb_per_poss", "ast_per_poss", "stl_per_poss", "blk_per_poss", "tov_per_poss", "pf_per_poss", "pts_per_poss", "off_rtg", "def_rtg"]
+    data_stats_per_game = [
+        "season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp_per_g", "fg_per_g", "fga_per_g", "fg_pct", "fg3_per_g",
+        "fg3a_per_g", "fg3_pct", "fg2_per_g", "fg2a_per_g", "fg2_pct", "efg_pct", "ft_per_g", "fta_per_g", "ft_pct", "orb_per_g",
+        "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g", "blk_per_g", "tov_per_g", "pf_per_g", "pts_per_g"]
+    data_stats_per_minute = [
+        'season', 'age', "team_id", "lg_id", "pos", "g", "gs", "mp", "fg_per_mp", "fga_per_mp", "fg_pct", "fg3_per_mp",
+        "fg3a_per_mp", "fg3_pct", "fg2_per_mp", "fg2a_per_mp", "fg2_pct", "ft_per_mp", "fta_per_mp", "ft_pct", "orb_per_mp",
+        "drb_per_mp", "trb_per_mp", "ast_per_mp", "stl_per_mp", "blk_per_mp", "tov_per_mp", "pf_per_mp", "pts_per_mp"]
+    data_stats_per_poss = [
+        "season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp", "fg_per_poss", "fga_per_poss",
+        "fg_pct", "fg3_per_poss", "fg3a_per_poss", "fg3_pct", "fg2_per_poss", "fg2a_per_poss", "fg2_pct",
+        "ft_per_poss", "fta_per_poss", "ft_pct", "orb_per_poss", "drb_per_poss", "trb_per_poss", "ast_per_poss", "stl_per_poss",
+        "blk_per_poss", "tov_per_poss", "pf_per_poss", "pts_per_poss", "off_rtg", "def_rtg"]
+    data_stats_advance = [
+        'season', 'age', 'team_id', 'lg_id', 'pos', 'g', 'mp', 'per', 'ts_pct', 'fg3a_per_fga_pct',
+        'fta_per_fga_pct', 'orb_pct', 'drb_pct', 'trb_pct', 'ast_pct', 'stl_pct', 'blk_pct',
+        'tov_pct', 'usg_pct', 'DUMMY', 'ows', 'dws', 'ws', 'ws_per_48', 'DUMMY', 'obpm', 'dbpm',
+        'bpm', 'vorp']
+    data_stat_adjusted_shooting = [
+        'season', 'age', 'team_id', 'lg_id', 'pos', 'g', 'mp', 'DUMMY', 'fg_pct', 'fg2_pct', 'fg3_pct',
+        'efg_pct', 'ft_pct', 'ts_pct', 'fta_per_fga_pct', 'fg3a_per_fga_pct', 'DUMMY', 'lg_fg_pct', 'lg_fg2_pct',
+        'lg_fg3_pct', 'lg_efg_pct', 'lg_ft_pct', 'lg_ts_pct', 'lg_fta_per_fga_pct', 'lg_fg3a_per_fga_pct', 'DUMMY',
+        'adj_fg_pct', 'adj_fg2_pct', 'adj_fg3_pct', 'adj_efg_pct', 'adj_ft_pct', 'adj_ts_pct', 'adj_fta_per_fga_pct',
+        'adj_fg3a_per_fga_pct', 'DUMMY', 'fg_pts_added', 'ts_pts_added']
+    data_stats_play_by_play = [
+        'season', 'age', 'team_id', 'lg_id', 'pos', 'g', 'mp', 'pct_1', 'pct_2', 'pct_3', 'pct_4', 'pct_5',
+        'plus_minus_on', 'plus_minus_net', 'tov_bad_pass', 'tov_lost_ball', 'fouls_shooting', 'fouls_offensive',
+        'drawn_shooting', 'drawn_offensive', 'astd_pts', 'and1s', 'own_shots_blk']
+    data_stats_shooting = [
+        'season', 'age', 'team_id', 'lg_id', 'pos', 'g', 'mp', 'fg_pct', 'avg_dist', 'DUMMY',
+        'pct_fga_fg2a', 'pct_fga_00_03', 'pct_fga_03_10', 'pct_fga_10_16', 'pct_fga_16_xx', 'pct_fga_fg3a', 'DUMMY',
+        'fg_pct_fg2a', 'fg_pct_00_03', 'fg_pct_03_10', 'fg_pct_10_16', 'fg_pct_16_xx', 'fg_pct_fg3a', 'DUMMY',
+        'pct_ast_fg2', 'pct_ast_fg3', 'DUMMY', 'pct_fga_dunk', 'fg_dunk', 'DUMMY', 'pct_fg3a_corner3', 'fg_pct_corner3',
+        'DUMMY', 'fg3a_heave', 'fg3_heave']
 
-    stats_tables_per_game = {
-        "per_game_regular_season": get_data(soup.find('table', {'id': 'per_game'}), data_stats),
-        "per_game_playoff": get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats)
-    }
-
-    stats_tables_per_minute = get_stats_table(
+    stats_tables_per_minute = get_and_cleanup_stats_table(
         soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
-    stats_tables_per_poss = get_stats_table(
+
+    stats_tables_per_poss = get_and_cleanup_stats_table(
         soup, 'all_per_poss-playoffs_per_poss', data_stats_per_poss)
+
+    stats_tables_all_adj_shooting = get_and_cleanup_stats_table(
+        soup, 'all_adj_shooting', data_stat_adjusted_shooting, cleanup=True)
+
+    stats_tables_play_by_play = get_and_cleanup_stats_table(
+        soup, 'all_pbp-playoffs_pbp', data_stats_play_by_play, cleanup=True)
+
+    stats_tables_shooting = get_and_cleanup_stats_table(
+        soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
+
+    tables = soup.find_all('table')
+    for table in tables:
+        print(table.get('id'))  # print the id of each table
 
     return jsonify({
         "image": get_image(soup),
-        **stats_tables_per_game,
+
+        "per_game_regular_season": get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game),
+        "per_game_playoff": get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game),
+        
+        "advanced_regular_season": get_data(soup.find('table', {'id': 'advanced'}), data_stats_advance),
+        "advanced_regular_playoff": get_data(soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance),
+
         "per_36_regular_season": stats_tables_per_minute.get('per_minute'),
         "per_36_playoff": stats_tables_per_minute.get('playoffs_per_minute'),
 
         "per_100_regular_season": stats_tables_per_poss.get('per_poss'),
         "per_100_playoff": stats_tables_per_poss.get('playoffs_per_poss'),
 
-        "advanced_regular_season": {},
-        "advanced_regular_playoff": {},
+        "adjusted_shooting_regular_season": stats_tables_all_adj_shooting.get("adj_shooting"),
 
-        "adjusted_shooting_regular_season": {},
-        "adjusted_shooting_playoff": {},
+        "play_by_play_regular_season": stats_tables_play_by_play.get("pbp"),
+        "play_by_play_playoff": stats_tables_play_by_play.get("playoffs_pbp"),
 
-        "play_by_play_regular_season": {},
-        "play_by_play_playoff": {},
-        
-        "shooting_regular_season": {},
-        "shooting_playoff": {},
+        "shooting_regular_season": stats_tables_shooting.get("shooting"),
+        "shooting_playoff": stats_tables_shooting.get("playoffs_shooting"),
+
+        "totals": [],
+        "totals_playoffs": [],
+        "awards_honors": [],
     })
