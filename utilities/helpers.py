@@ -26,3 +26,13 @@ def find_commented_tables(soup):
         if table:
             tables.extend(table)
     return tables
+
+def find_commented_divs(soup):
+    divs = []
+    comments = soup.find_all(text=lambda text: isinstance(text, Comment))
+    for comment in comments:
+        comment_soup = BeautifulSoup(comment, 'html.parser')
+        div = comment_soup.find_all('div', id=True)
+        if div:
+            divs.extend(div)
+    return divs

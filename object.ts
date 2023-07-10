@@ -152,6 +152,19 @@ const nba_history = {
 	"2020s": ["2020-21", "2021-22", "2022-23", "2023-24"],
 };
 
-const seasons={
-	
+const awards_honor = {
+	div_leaderboard: [
+		"2014-15 Most Valuable Player (Michael Jordan Trophy)",
+		"2015-16 Most Valuable Player (Michael Jordan Trophy)",
+		"2021-22 NBA 75th Anniversary Team",
+		"2022 All-Star Game Most Valuable Player (Kobe Bryant Trophy)",
+		'2022 Western Conference Finals Most Valuable Player (Earvin "Magic" Johnson Trophy)',
+		"2022 Finals Most Valuable Player (Bill Russell Trophy)",
+		"2022-23 Social Justice Champion (Kareem Abdul-Jabbar Trophy)",
+		"2022-23 J. Walter Kennedy Citizenship Award",
+	],
 }
+	
+		
+	
+

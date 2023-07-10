@@ -1,7 +1,8 @@
 from flask import jsonify
+from bs4 import BeautifulSoup, Comment
 
 from .settings import team_ids
-from .helpers import fetch_url_content, parse_data, find_commented_tables
+from .helpers import fetch_url_content, parse_data, find_commented_tables, find_commented_divs
 
 import re
 import string
@@ -282,6 +283,23 @@ def get_player_data(player_id):
                     stats_table[key].pop(0)
         return stats_table
 
+    def parse_table_to_list(table):
+        data_list = []
+        rows = table.find_all('tr')
+        for row in rows:
+            row_text = ' '.join(row.stripped_strings)
+            data_list.append(row_text)
+        return data_list
+
+    def parse_commented_divs_to_dict(divs):
+        div_dict = {}
+        for div in divs:
+            div_id = div.get('id', '')
+            table = div.find('table')
+            if table:
+                div_dict[div_id] = parse_table_to_list(table)
+        return div_dict
+        
     url = f'https://www.basketball-reference.com/players/{player_id[0]}/{player_id}.html'
     soup = fetch_url_content(url)
 
@@ -319,6 +337,10 @@ def get_player_data(player_id):
         'fg_pct_fg2a', 'fg_pct_00_03', 'fg_pct_03_10', 'fg_pct_10_16', 'fg_pct_16_xx', 'fg_pct_fg3a', 'DUMMY',
         'pct_ast_fg2', 'pct_ast_fg3', 'DUMMY', 'pct_fga_dunk', 'fg_dunk', 'DUMMY', 'pct_fg3a_corner3', 'fg_pct_corner3',
         'DUMMY', 'fg3a_heave', 'fg3_heave']
+    data_stat_totals = [
+        "season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp", "fg", "fga",
+        "fg_pct", "fg3", "fg3a", "fg3_pct", "fg2", "fg2a", "fg2_pct", "efg_pct",
+        "ft", "fta", "ft_pct", "orb", "drb", "trb", "ast", "stl", "blk", "tov", "pf", "pts", "DUMMY", "trp_dbl",]
 
     stats_tables_per_minute = get_and_cleanup_stats_table(
         soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
@@ -334,17 +356,24 @@ def get_player_data(player_id):
 
     stats_tables_shooting = get_and_cleanup_stats_table(
         soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
+    
+    div_leaderboard = soup.find('div', {'id': 'all_leaderboard'})
+    commented_divs = find_commented_divs(div_leaderboard)
+    div_dict = parse_commented_divs_to_dict(commented_divs)
 
-    tables = soup.find_all('table')
-    for table in tables:
-        print(table.get('id'))  # print the id of each table
+      # Create a dict to store the data
+    data_dict = {}
+
+    # Add the data into the dict
+    for id, table in div_dict.items():
+        data_dict[id] = table
 
     return jsonify({
         "image": get_image(soup),
 
         "per_game_regular_season": get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game),
         "per_game_playoff": get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game),
-        
+
         "advanced_regular_season": get_data(soup.find('table', {'id': 'advanced'}), data_stats_advance),
         "advanced_regular_playoff": get_data(soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance),
 
@@ -362,7 +391,8 @@ def get_player_data(player_id):
         "shooting_regular_season": stats_tables_shooting.get("shooting"),
         "shooting_playoff": stats_tables_shooting.get("playoffs_shooting"),
 
-        "totals": [],
-        "totals_playoffs": [],
-        "awards_honors": [],
+        "totals_regular_season": get_data(soup.find('table', {'id': 'totals'}), data_stat_totals),
+        "totals_playoffs": get_data(soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals),
+
+        "awards_honors": data_dict,
     })
