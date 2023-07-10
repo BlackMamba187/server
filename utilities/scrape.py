@@ -217,8 +217,6 @@ def get_team_info(team_id):
 players_data = {letter: None for letter in string.ascii_lowercase}
 
 # get all players by letter
-
-
 def get_all_players_data(letter):
 
     url = f"https://www.basketball-reference.com/players/{letter}/"
