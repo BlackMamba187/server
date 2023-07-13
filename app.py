@@ -1,13 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
-from bs4 import BeautifulSoup
 
 from utilities.scrape import get_active_teams, get_team_info, get_all_players_data, get_all_players_data_for_all_letters,  get_player_data
 
 app = Flask(__name__)
 CORS(app)
-
-# Flask route definition for /activeteams
 
 
 @app.route('/activeteams', methods=['GET'])
