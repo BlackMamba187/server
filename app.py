@@ -6,7 +6,10 @@ from utilities.scrape import get_active_teams, get_team_info, get_all_players_da
 app = Flask(__name__)
 CORS(app)
 
-
+@app.route('/', methods=['GET'])
+def home():
+    return "Welcome to our web service!"
+    
 @app.route('/activeteams', methods=['GET'])
 def active_teams_json():
     data = get_active_teams()
