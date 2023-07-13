@@ -1,5 +1,4 @@
 from flask import jsonify
-from bs4 import BeautifulSoup, Comment
 
 from .settings import team_ids
 from .helpers import fetch_url_content, parse_data, find_commented_tables, find_commented_divs
@@ -7,9 +6,6 @@ from .helpers import fetch_url_content, parse_data, find_commented_tables, find_
 import re
 import string
 import time
-
-# get active teams
-
 
 def get_active_teams():
     stats_list = ['lg_id', 'year_min', 'year_max', 'years', 'g', 'wins', 'losses', 'win_loss_pct',
@@ -37,9 +33,6 @@ def get_active_teams():
                     row, stats_list)
 
     return jsonify(active_teams_data)
-
-# get one team info
-
 
 def get_team_info(team_id):
     year = "2023"
@@ -213,10 +206,8 @@ def get_team_info(team_id):
 
     return jsonify(team_stats)
 
-
 players_data = {letter: None for letter in string.ascii_lowercase}
 
-# get all players by letter
 def get_all_players_data(letter):
 
     url = f"https://www.basketball-reference.com/players/{letter}/"
@@ -245,7 +236,6 @@ def get_all_players_data(letter):
     players_data[letter] = player_data
     return jsonify(player_data)
 
-
 def get_all_players_data_for_all_letters():
     # Loop over all letters, calling the function for each letter
     for letter in string.ascii_lowercase:
@@ -257,7 +247,6 @@ def get_all_players_data_for_all_letters():
     # At this point, players_data should contain the player data for all letters
     # You can return it as a JSON object like this:
     return jsonify(players_data)
-
 
 def get_player_data(player_id):
     def get_data(table, stats):
