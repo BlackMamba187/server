@@ -1,5 +1,5 @@
 Flask
-BeautifulSoup
+bs4
 flask_cors
 json
 gunicorn==20.1.0
