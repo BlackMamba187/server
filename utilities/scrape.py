@@ -7,6 +7,7 @@ import re
 import string
 import time
 
+
 def get_active_teams():
     stats_list = ['lg_id', 'year_min', 'year_max', 'years', 'g', 'wins', 'losses', 'win_loss_pct',
                   'years_playoffs', 'years_division_champion', 'years_conference_champion', 'years_league_champion']
@@ -33,6 +34,7 @@ def get_active_teams():
                     row, stats_list)
 
     return jsonify(active_teams_data)
+
 
 def get_team_info(team_id):
     year = "2023"
@@ -206,7 +208,37 @@ def get_team_info(team_id):
 
     return jsonify(team_stats)
 
+def get_season_avgs():
+    per_game_url = f'https://www.basketball-reference.com/leagues/NBA_stats_per_game.html'
+    per_100_url = f'https://www.basketball-reference.com/leagues/NBA_stats_per_poss.html'
+
+    soup_per_game = fetch_url_content(per_game_url)
+    soup_per_100 = fetch_url_content(per_100_url)
+
+    data_stats_per_game = [
+        "ranker", "season", "lg_id", "age", "height", "weight", "g", "mp_per_g", "fg_per_g", 
+        "fga_per_g", "fg3_per_g", "fg3a_per_g", "ft_per_g", "fta_per_g", "orb_per_g", 
+        "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g", "blk_per_g", "tov_per_g", 
+        "pf_per_g", "pts_per_g", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct", 
+        "tov_pct", "orb_pct", "ft_rate", "off_rtg"]
+    data_stats_per_poss = [
+        "ranker", "season", "lg_id", "age", "height", "weight", "g", "fg_per_poss", "fga_per_poss",
+        "fg3_per_poss", "fg3a_per_poss", "ft_per_poss", "fta_per_poss", "orb_per_poss", "drb_per_poss", 
+        "trb_per_poss", "ast_per_poss", "stl_per_poss", "blk_per_poss", "tov_per_poss", "pf_per_poss", 
+        "pts_per_poss", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct", "tov_pct", "orb_pct", "ft_rate", 
+        "off_rtg"]
+
+    def get_data(table, stats):
+        rows = table.find_all('tr')[2:]
+        return [parse_data(row, stats) for row in rows if row.parent.name != 'tfoot']
+
+    return jsonify({
+        "NBA_averages_per_game": get_data(soup_per_game.find('table', {'id': 'stats'}), data_stats_per_game),
+        "NBA_averages_per_100": get_data(soup_per_100.find('table', {'id': 'stats'}), data_stats_per_poss),
+    })
+
 players_data = {letter: None for letter in string.ascii_lowercase}
+
 
 def get_all_players_data(letter):
 
@@ -236,6 +268,7 @@ def get_all_players_data(letter):
     players_data[letter] = player_data
     return jsonify(player_data)
 
+
 def get_all_players_data_for_all_letters():
     # Loop over all letters, calling the function for each letter
     for letter in string.ascii_lowercase:
@@ -247,6 +280,7 @@ def get_all_players_data_for_all_letters():
     # At this point, players_data should contain the player data for all letters
     # You can return it as a JSON object like this:
     return jsonify(players_data)
+
 
 def get_player_data(player_id):
     def get_data(table, stats):
@@ -286,7 +320,7 @@ def get_player_data(player_id):
             if table:
                 div_dict[div_id] = parse_table_to_list(table)
         return div_dict
-        
+
     url = f'https://www.basketball-reference.com/players/{player_id[0]}/{player_id}.html'
     soup = fetch_url_content(url)
 
@@ -343,12 +377,12 @@ def get_player_data(player_id):
 
     stats_tables_shooting = get_and_cleanup_stats_table(
         soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
-    
+
     div_leaderboard = soup.find('div', {'id': 'all_leaderboard'})
     commented_divs = find_commented_divs(div_leaderboard)
     div_dict = parse_commented_divs_to_dict(commented_divs)
 
-      # Create a dict to store the data
+    # Create a dict to store the data
     data_dict = {}
 
     # Add the data into the dict
