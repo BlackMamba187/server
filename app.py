@@ -1,14 +1,19 @@
 from flask import Flask
 from flask_cors import CORS
 
-from utilities.scrape import get_active_teams, get_team_info, get_all_players_data, get_all_players_data_for_all_letters,  get_player_data
+from utilities.scrape import get_active_teams, get_team_info, get_all_players_data, get_all_players_data_for_all_letters, get_player_data, get_season_avgs
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route('/', methods=['GET'])
 def home():
-    return "Welcome to our web service!"
+    return "Welcome to our nba web service!"
+
+@app.route('/seasonavg', methods=['GET'])
+def season_avg():
+    data = get_season_avgs()
+    return data
     
 @app.route('/activeteams', methods=['GET'])
 def active_teams_json():
