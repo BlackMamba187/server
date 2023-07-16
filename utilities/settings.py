@@ -1,7 +1,7 @@
 team_ids = {
     "ATL": "Atlanta Hawks",
     "BOS": "Boston Celtics",
-    "BRK": "Brooklyn Nets",
+    "NJN": "Brooklyn Nets",
     "CHA": "Charlotte Hornets",
     "CHI": "Chicago Bulls",
     "CLE": "Cleveland Cavaliers",
