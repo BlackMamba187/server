@@ -72,8 +72,7 @@ def get_team_info(team_id):
 
     # parse the meta team profile data
     meta_soup = fetch_url_content(meta_url)
-    html_info = meta_soup.find(
-        'div', {'id': 'info'}).find('div', {'id': 'meta'})
+    html_info = meta_soup.find('div', {'id': 'info'}).find('div', {'id': 'meta'})
 
     # parse the team season data
     html_seasons_table = meta_soup.find('table', {'id': team_id})
