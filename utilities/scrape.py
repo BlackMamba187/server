@@ -41,7 +41,7 @@ team_id_mapping = {
 
 
 def get_team_info(team_id):
-    year = "2023"
+    year = "2024"
     current_url = f'https://www.basketball-reference.com/teams/{team_id}/{year}.html'
 
     meta_id = team_id_mapping.get(team_id, team_id)
