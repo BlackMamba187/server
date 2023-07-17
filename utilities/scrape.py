@@ -65,7 +65,6 @@ def get_team_info(team_id):
 
             players.append(player_data)
         return players
-
     # parse the curent team roster data
     soup = fetch_url_content(current_url)
 
