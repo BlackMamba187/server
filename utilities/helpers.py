@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup, Comment
-from .settings import team_ids
 
 def fetch_url_content(url):
     response = requests.get(url)
