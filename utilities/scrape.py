@@ -1,6 +1,5 @@
 from flask import jsonify
 
-from .settings import team_ids
 from .helpers import fetch_url_content, parse_data, find_commented_tables, find_commented_divs
 
 import re
@@ -36,11 +35,17 @@ def get_active_teams():
     return jsonify(active_teams_data)
 
 
+team_id_mapping = {
+    "BRK": "NJN",
+}
+
+
 def get_team_info(team_id):
     year = "2023"
     current_url = f'https://www.basketball-reference.com/teams/{team_id}/{year}.html'
 
-    meta_url = f'https://www.basketball-reference.com/teams/{team_id}/'
+    meta_id = team_id_mapping.get(team_id, team_id)
+    meta_url = f'https://www.basketball-reference.com/teams/{meta_id}/'
 
     def parse_roster_table(table):
         # skip the first row, as it is the header
@@ -72,10 +77,11 @@ def get_team_info(team_id):
 
     # parse the meta team profile data
     meta_soup = fetch_url_content(meta_url)
-    html_info = meta_soup.find('div', {'id': 'info'}).find('div', {'id': 'meta'})
+    html_info = meta_soup.find(
+        'div', {'id': 'info'}).find('div', {'id': 'meta'})
 
     # parse the team season data
-    html_seasons_table = meta_soup.find('table', {'id': team_id})
+    html_seasons_table = meta_soup.find('table', {'id': meta_id})
 
     def parse_seasons_table(table):
         # skip the first row, as it is the header
@@ -207,6 +213,7 @@ def get_team_info(team_id):
 
     return jsonify(team_stats)
 
+
 def get_season_avgs():
     per_game_url = f'https://www.basketball-reference.com/leagues/NBA_stats_per_game.html'
     per_100_url = f'https://www.basketball-reference.com/leagues/NBA_stats_per_poss.html'
@@ -215,16 +222,16 @@ def get_season_avgs():
     soup_per_100 = fetch_url_content(per_100_url)
 
     data_stats_per_game = [
-        "ranker", "season", "lg_id", "age", "height", "weight", "g", "mp_per_g", "fg_per_g", 
-        "fga_per_g", "fg3_per_g", "fg3a_per_g", "ft_per_g", "fta_per_g", "orb_per_g", 
-        "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g", "blk_per_g", "tov_per_g", 
-        "pf_per_g", "pts_per_g", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct", 
+        "ranker", "season", "lg_id", "age", "height", "weight", "g", "mp_per_g", "fg_per_g",
+        "fga_per_g", "fg3_per_g", "fg3a_per_g", "ft_per_g", "fta_per_g", "orb_per_g",
+        "drb_per_g", "trb_per_g", "ast_per_g", "stl_per_g", "blk_per_g", "tov_per_g",
+        "pf_per_g", "pts_per_g", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct",
         "tov_pct", "orb_pct", "ft_rate", "off_rtg"]
     data_stats_per_poss = [
         "ranker", "season", "lg_id", "age", "height", "weight", "g", "fg_per_poss", "fga_per_poss",
-        "fg3_per_poss", "fg3a_per_poss", "ft_per_poss", "fta_per_poss", "orb_per_poss", "drb_per_poss", 
-        "trb_per_poss", "ast_per_poss", "stl_per_poss", "blk_per_poss", "tov_per_poss", "pf_per_poss", 
-        "pts_per_poss", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct", "tov_pct", "orb_pct", "ft_rate", 
+        "fg3_per_poss", "fg3a_per_poss", "ft_per_poss", "fta_per_poss", "orb_per_poss", "drb_per_poss",
+        "trb_per_poss", "ast_per_poss", "stl_per_poss", "blk_per_poss", "tov_per_poss", "pf_per_poss",
+        "pts_per_poss", "fg_pct", "fg3_pct", "ft_pct", "pace", "efg_pct", "tov_pct", "orb_pct", "ft_rate",
         "off_rtg"]
 
     def get_data(table, stats):
@@ -235,6 +242,7 @@ def get_season_avgs():
         "NBA_averages_per_game": get_data(soup_per_game.find('table', {'id': 'stats'}), data_stats_per_game),
         "NBA_averages_per_100": get_data(soup_per_100.find('table', {'id': 'stats'}), data_stats_per_poss),
     })
+
 
 players_data = {letter: None for letter in string.ascii_lowercase}
 
