@@ -54,7 +54,7 @@ def get_team_info(team_id):
         for row in rows:
             player_data = parse_data(row, ["player", "pos", "height", "weight",
                                      "birth_date", "college", "birth_country", "years_experience"])
-            player_data["No."] = row.find(
+            player_data["number"] = row.find(
                 'th', {'data-stat': 'number'}).text.strip()
 
             player_link = row.find('td', {'data-stat': 'player'}).find('a')
