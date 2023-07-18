@@ -41,7 +41,7 @@ team_id_mapping = {
 
 
 def get_team_info(team_id):
-    year = "2024"
+    year = "2023"
     current_url = f'https://www.basketball-reference.com/teams/{team_id}/{year}.html'
 
     meta_id = team_id_mapping.get(team_id, team_id)
@@ -56,6 +56,7 @@ def get_team_info(team_id):
                                      "birth_date", "college", "birth_country", "years_experience"])
             player_data["No."] = row.find(
                 'th', {'data-stat': 'number'}).text.strip()
+
             player_link = row.find('td', {'data-stat': 'player'}).find('a')
             player_data["id"] = player_link['href'].split(
                 '/')[-1].split('.')[0]
