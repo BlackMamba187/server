@@ -1,5 +1,7 @@
 Flask
 bs4
 flask_cors
+datetime 
+apscheduler.schedulers.background
 gunicorn==20.1.0
 requests==2.26.0
