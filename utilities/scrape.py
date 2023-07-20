@@ -211,7 +211,7 @@ def get_team_info(team_id):
         "current_roster": team_roster_data
     }
 
-    return jsonify(team_stats)
+    return team_stats
 
 
 def get_season_avgs():
@@ -238,10 +238,10 @@ def get_season_avgs():
         rows = table.find_all('tr')[2:]
         return [parse_data(row, stats) for row in rows if row.parent.name != 'tfoot']
 
-    return jsonify({
+    return {
         "NBA_averages_per_game": get_data(soup_per_game.find('table', {'id': 'stats'}), data_stats_per_game),
         "NBA_averages_per_100": get_data(soup_per_100.find('table', {'id': 'stats'}), data_stats_per_poss),
-    })
+    }
 
 
 players_data = {letter: None for letter in string.ascii_lowercase}
@@ -273,7 +273,7 @@ def get_all_players_data(letter):
     player_data = parse_players_table(html_players_table)
 
     players_data[letter] = player_data
-    return jsonify(player_data)
+    return player_data
 
 
 def get_all_players_data_for_all_letters():
@@ -286,7 +286,7 @@ def get_all_players_data_for_all_letters():
 
     # At this point, players_data should contain the player data for all letters
     # You can return it as a JSON object like this:
-    return jsonify(players_data)
+    return players_data
 
 
 def get_player_data(player_id):
@@ -396,7 +396,7 @@ def get_player_data(player_id):
     for id, table in div_dict.items():
         data_dict[id] = table
 
-    return jsonify({
+    return {
         "image": get_image(soup),
 
         "per_game_regular_season": get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game),
@@ -423,4 +423,4 @@ def get_player_data(player_id):
         "totals_playoffs": get_data(soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals),
 
         "awards_honors": data_dict,
-    })
+    }
