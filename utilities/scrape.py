@@ -32,7 +32,7 @@ def get_active_teams():
                 active_teams_data[last_team_name]['History'][row.th.text.strip()] = parse_data(
                     row, stats_list)
 
-    return jsonify(active_teams_data)
+    return active_teams_data
 
 
 team_id_mapping = {
