@@ -37,6 +37,7 @@ def get_active_teams():
 
 team_id_mapping = {
     "BRK": "NJN",
+    "CHO": "CHA",
 }
 
 
