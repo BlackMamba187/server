@@ -11,25 +11,43 @@ CORS(app)
 cache = {}
 
 def update_cache():
-    cache['active_teams'] = get_active_teams()
-    cache['team_info'] = {team_id: get_team_info(team_id) for team_id in cache['active_teams']}
-    cache['all_players_data'] = get_all_players_data_for_all_letters()
-    cache['season_avgs'] = get_season_avgs()
-    # For each player in all_players_data, get their individual data.
-    # This might be slow if there are a lot of players. You might consider optimizing this.
-    cache['player_data'] = {player_id: get_player_data(player_id) for player_id in cache['all_players_data']}
+    try:
+        cache['active_teams'] = get_active_teams()
+    except Exception as e:
+        print(f"Failed to update active_teams: {e}")
+
+    try:
+        cache['team_info'] = {team_id: get_team_info(team_id) for team_id in cache.get('active_teams', {})}
+    except Exception as e:
+        print(f"Failed to update team_info: {e}")
+
+    try:
+        cache['all_players_data'] = get_all_players_data_for_all_letters()
+    except Exception as e:
+        print(f"Failed to update all_players_data: {e}")
+
+    try:
+        cache['season_avgs'] = get_season_avgs()
+    except Exception as e:
+        print(f"Failed to update season_avgs: {e}")
+
+    try:
+        cache['player_data'] = {player_id: get_player_data(player_id) for player_id in cache.get('all_players_data', {})}
+    except Exception as e:
+        print(f"Failed to update player_data: {e}")
 
 scheduler = BackgroundScheduler()
 job = scheduler.add_job(func=update_cache, trigger="interval", hours=1)
 scheduler.start()
 
+# Manually update the cache once right at the start
+update_cache()
+
 def get_data_or_info_when_next(key):
     data = cache.get(key)
     if data is None:
-
         return jsonify({'message': 'Data not available in cache'}), 202
     return data
-
 
 @app.route('/', methods=['GET'])
 def home():
