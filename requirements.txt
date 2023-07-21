@@ -1,7 +1,5 @@
 Flask
 bs4
 flask_cors
-datetime
-APScheduler
 gunicorn==20.1.0
 requests==2.26.0
