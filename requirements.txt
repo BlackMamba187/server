@@ -1,5 +1,6 @@
 Flask
 bs4
 flask_cors
+flask-Caching
 gunicorn==20.1.0
 requests==2.26.0
