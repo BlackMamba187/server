@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template_string
 from flask_cors import CORS
 from flask_caching import Cache
 
@@ -13,7 +13,56 @@ cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 @app.route('/', methods=['GET'])
 def home():
-    return "Welcome to our nba web service!"
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>NBA Web Service</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 40px;
+                line-height: 1.6;
+            }
+            h1 {
+                color: #333;
+            }
+            p {
+                margin-bottom: 20px;
+            }
+            ul {
+                list-style-type: none;
+                padding: 0;
+            }
+            li {
+                margin-bottom: 10px;
+            }
+            a {
+                text-decoration: none;
+                color: #007BFF;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to our NBA Web Service!</h1>
+        <p>Use the following routes to access various NBA data:</p>
+        <ul>
+            <li><a href="">/seasonavg</a> - Get season averages</li>
+            <li><a href="">/activeteams</a> - Get active teams in the NBA and their history</li>
+            <li><a href="">/team/&lt;team_id&gt;</a> - Get specific team information (replace <strong>&lt;team_id&gt;</strong> with the team's ID from the active teams)</li>
+            <li><a href="">/players</a> - Get all players ever</li>
+            <li><a href="">/player/&lt;player_id&gt;</a> - Get specific player data (replace <strong>&lt;player_id&gt;</strong> with the player's ID)</li>
+        </ul>
+    </body>
+    </html>
+    """
+    return render_template_string(html_content)
+
 
 @app.route('/seasonavg', methods=['GET'])
 @cache.cached(timeout=86400) # data updates once a day
