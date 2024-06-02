@@ -2,6 +2,8 @@ from .helpers import fetch_url_content, parse_data, find_commented_tables, find_
 import re
 import string
 import time
+import logging
+
 
 # Fetch and parse active team data
 def get_active_teams():
@@ -207,7 +209,12 @@ def get_player_data(player_id):
         return div_dict
 
     url = f'https://www.basketball-reference.com/players/{player_id[0]}/{player_id}.html'
-    soup = fetch_url_content(url)
+    
+    try:
+        soup = fetch_url_content(url)
+    except Exception as e:
+        logging.error(f"Error fetching or parsing URL {url}: {e}")
+        return {"error": f"Could not fetch or parse data for player {player_id}"}
 
     data_stats_per_game = [
         "season", "age", "team_id", "lg_id", "pos", "g", "gs", "mp_per_g", "fg_per_g", "fga_per_g", "fg_pct", "fg3_per_g",
@@ -248,36 +255,82 @@ def get_player_data(player_id):
         "fg_pct", "fg3", "fg3a", "fg3_pct", "fg2", "fg2a", "fg2_pct", "efg_pct",
         "ft", "fta", "ft_pct", "orb", "drb", "trb", "ast", "stl", "blk", "tov", "pf", "pts", "DUMMY", "trp_dbl"]
 
-    stats_tables_per_minute = get_and_cleanup_stats_table(soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
-    stats_tables_per_poss = get_and_cleanup_stats_table(soup, 'all_per_poss-playoffs_per_poss', data_stats_per_poss)
-    stats_tables_all_adj_shooting = get_and_cleanup_stats_table(soup, 'all_adj_shooting', data_stat_adjusted_shooting, cleanup=True)
-    stats_tables_play_by_play = get_and_cleanup_stats_table(soup, 'all_pbp-playoffs_pbp', data_stats_play_by_play, cleanup=True)
-    stats_tables_shooting = get_and_cleanup_stats_table(soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
+    data = {}
+    
+    try:
+        data["image"] = get_image(soup)
+    except Exception as e:
+        logging.error(f"Error getting image: {e}")
 
-    div_leaderboard = soup.find('div', {'id': 'all_leaderboard'})
-    commented_divs = find_commented_divs(div_leaderboard)
-    div_dict = parse_commented_divs_to_dict(commented_divs)
+    try:
+        data["per_game_regular_season"] = get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game)
+    except Exception as e:
+        logging.error(f"Error getting per_game_regular_season data: {e}")
+    
+    try:
+        data["per_game_playoff"] = get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game)
+    except Exception as e:
+        logging.error(f"Error getting per_game_playoff data: {e}")
 
-    data_dict = {}
-    for id, table in div_dict.items():
-        data_dict[id] = table
+    try:
+        data["advanced_regular_season"] = get_data(soup.find('table', {'id': 'advanced'}), data_stats_advance)
+    except Exception as e:
+        logging.error(f"Error getting advanced_regular_season data: {e}")
 
-    return {
-        "image": get_image(soup),
-        "per_game_regular_season": get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game),
-        "per_game_playoff": get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game),
-        "advanced_regular_season": get_data(soup.find('table', {'id': 'advanced'}), data_stats_advance),
-        "advanced_regular_playoff": get_data(soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance),
-        "per_36_regular_season": stats_tables_per_minute.get('per_minute'),
-        "per_36_playoff": stats_tables_per_minute.get('playoffs_per_minute'),
-        "per_100_regular_season": stats_tables_per_poss.get('per_poss'),
-        "per_100_playoff": stats_tables_per_poss.get('playoffs_per_poss'),
-        "adjusted_shooting_regular_season": stats_tables_all_adj_shooting.get("adj_shooting"),
-        "play_by_play_regular_season": stats_tables_play_by_play.get("pbp"),
-        "play_by_play_playoff": stats_tables_play_by_play.get("playoffs_pbp"),
-        "shooting_regular_season": stats_tables_shooting.get("shooting"),
-        "shooting_playoff": stats_tables_shooting.get("playoffs_shooting"),
-        "totals_regular_season": get_data(soup.find('table', {'id': 'totals'}), data_stat_totals),
-        "totals_playoffs": get_data(soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals),
-        "awards_honors": data_dict,
-    }
+    try:
+        data["advanced_regular_playoff"] = get_data(soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance)
+    except Exception as e:
+        logging.error(f"Error getting advanced_regular_playoff data: {e}")
+
+    try:
+        stats_tables_per_minute = get_and_cleanup_stats_table(soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
+        data["per_36_regular_season"] = stats_tables_per_minute.get('per_minute')
+        data["per_36_playoff"] = stats_tables_per_minute.get('playoffs_per_minute')
+    except Exception as e:
+        logging.error(f"Error getting per_36 data: {e}")
+
+    try:
+        stats_tables_per_poss = get_and_cleanup_stats_table(soup, 'all_per_poss-playoffs_per_poss', data_stats_per_poss)
+        data["per_100_regular_season"] = stats_tables_per_poss.get('per_poss')
+        data["per_100_playoff"] = stats_tables_per_poss.get('playoffs_per_poss')
+    except Exception as e:
+        logging.error(f"Error getting per_100 data: {e}")
+
+    try:
+        stats_tables_all_adj_shooting = get_and_cleanup_stats_table(soup, 'all_adj_shooting', data_stat_adjusted_shooting, cleanup=True)
+        data["adjusted_shooting_regular_season"] = stats_tables_all_adj_shooting.get("adj_shooting")
+    except Exception as e:
+        logging.error(f"Error getting adjusted_shooting data: {e}")
+
+    try:
+        stats_tables_play_by_play = get_and_cleanup_stats_table(soup, 'all_pbp-playoffs_pbp', data_stats_play_by_play, cleanup=True)
+        data["play_by_play_regular_season"] = stats_tables_play_by_play.get("pbp")
+        data["play_by_play_playoff"] = stats_tables_play_by_play.get("playoffs_pbp")
+    except Exception as e:
+        logging.error(f"Error getting play_by_play data: {e}")
+
+    try:
+        stats_tables_shooting = get_and_cleanup_stats_table(soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
+        data["shooting_regular_season"] = stats_tables_shooting.get("shooting")
+        data["shooting_playoff"] = stats_tables_shooting.get("playoffs_shooting")
+    except Exception as e:
+        logging.error(f"Error getting shooting data: {e}")
+
+    try:
+        data["totals_regular_season"] = get_data(soup.find('table', {'id': 'totals'}), data_stat_totals)
+    except Exception as e:
+        logging.error(f"Error getting totals_regular_season data: {e}")
+
+    try:
+        data["totals_playoffs"] = get_data(soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals)
+    except Exception as e:
+        logging.error(f"Error getting totals_playoffs data: {e}")
+
+    try:
+        div_leaderboard = soup.find('div', {'id': 'all_leaderboard'})
+        commented_divs = find_commented_divs(div_leaderboard)
+        data["awards_honors"] = parse_commented_divs_to_dict(commented_divs)
+    except Exception as e:
+        logging.error(f"Error getting awards_honors data: {e}")
+
+    return data
