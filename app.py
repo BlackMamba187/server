@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request, jsonify
 from flask_cors import CORS
 
 from utilities.scrape import (get_active_teams, get_team_info, get_all_players_data, get_all_players_data_for_all_letters,
