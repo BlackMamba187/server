@@ -1,9 +1,8 @@
-from .helpers import fetch_url_content, parse_data, find_commented_tables, find_commented_divs
+from .helpers import fetch_url_content, parse_data, find_commented_tables, find_commented_divs, get_current_season_year, generate_nba_history
 import re
 import string
 import time
 import logging
-
 
 # Fetch and parse active team data
 def get_active_teams():
@@ -17,7 +16,7 @@ def get_active_teams():
     active_teams_data = {}
     last_team_name = None  # Store the last "full_table" team name
     rows = html_table.find_all('tr')
-    
+
     for row in rows:
         if 'full_table' in row.get('class', []):
             team_name = row.th.text.strip()
@@ -26,15 +25,16 @@ def get_active_teams():
             last_team_name = team_name
         elif 'partial_table' in row.get('class', []):
             if last_team_name:
-                active_teams_data[last_team_name]['History'][row.th.text.strip()] = parse_data(row, stats_list)
+                active_teams_data[last_team_name]['History'][row.th.text.strip()] = parse_data(
+                    row, stats_list)
 
     return active_teams_data
 
 # Fetch and parse detailed team info
 def get_team_info(team_id):
-    year = "2023"
-    current_url = f'https://www.basketball-reference.com/teams/{team_id}/{year}.html'
-    meta_id = team_id_mapping.get(team_id, team_id)
+    current_year = get_current_season_year()
+    current_url = f'https://www.basketball-reference.com/teams/{team_id}/{current_year}.html'
+    meta_id = team_id  # Assuming no mapping needed
     meta_url = f'https://www.basketball-reference.com/teams/{meta_id}/'
 
     def parse_roster_table(table):
@@ -52,7 +52,7 @@ def get_team_info(team_id):
     
     soup = fetch_url_content(current_url)
     html_table = soup.find('table', {'id': 'roster'})
-    team_roster_data = parse_roster_table(html_table)
+    team_roster_data = parse_roster_table(html_table) if html_table else []
 
     html_record = soup.find('div', {'id': 'info'})
     meta_soup = fetch_url_content(meta_url)
@@ -71,27 +71,15 @@ def get_team_info(team_id):
         return seasons_dict
 
     def match_seasons_with_data(seasons_data, nba_history):
+        new_history = []
         for decade in nba_history:
             for key, seasons in decade.items():
-                for i, season in enumerate(seasons):
-                    if season in seasons_data:
-                        seasons[i] = seasons_data[season]
-                    else:
-                        seasons[i] = {"name": "no season data"}
-        return nba_history
+                filtered_seasons = [seasons_data.get(season, {}) for season in seasons if seasons_data.get(season, {})]
+                if filtered_seasons:
+                    new_history.append({key: filtered_seasons})
+        return new_history
 
-    nba_history = [
-        {"1940s": ["1946-47", "1947-48", "1948-49", "1949-50"]},
-        {"1950s": ["1950-51", "1951-52", "1952-53", "1953-54", "1954-55", "1955-56", "1956-57", "1957-58", "1958-59", "1959-60"]},
-        {"1960s": ["1960-61", "1961-62", "1962-63", "1963-64", "1964-65", "1965-66", "1966-67", "1967-68", "1968-69", "1969-70"]},
-        {"1970s": ["1970-71", "1971-72", "1972-73", "1973-74", "1974-75", "1975-76", "1976-77", "1977-78", "1978-79", "1979-80"]},
-        {"1980s": ["1980-81", "1981-82", "1982-83", "1983-84", "1984-85", "1985-86", "1986-87", "1987-88", "1988-89", "1989-90"]},
-        {"1990s": ["1990-91", "1991-92", "1992-93", "1993-94", "1994-95", "1995-96", "1996-97", "1997-98", "1998-99", "1999-00"]},
-        {"2000s": ["2000-01", "2001-02", "2002-03", "2003-04", "2004-05", "2005-06", "2006-07", "2007-08", "2008-09", "2009-10"]},
-        {"2010s": ["2010-11", "2011-12", "2012-13", "2013-14", "2014-15", "2015-16", "2016-17", "2017-18", "2018-19", "2019-20"]},
-        {"2020s": ["2020-21", "2021-22", "2022-23", "2023-24"]}
-    ]
-
+    nba_history = generate_nba_history()
     seasons_data = parse_seasons_table(html_seasons_table)
     new_nba_history = match_seasons_with_data(seasons_data, nba_history)
 
@@ -101,7 +89,7 @@ def get_team_info(team_id):
         "location": re.sub('\s+', ' ', html_info.find_all('p')[2].text.replace('Location:', '').strip()),
         "seasons": re.sub('\s+', ' ', html_info.find_all('p')[4].text.replace('Seasons:', '').strip()),
         "all_time_record": re.sub('\s+', ' ', html_info.find_all('p')[5].text.replace('Record:', '').strip()),
-        "current_record": re.sub('\s+', ' ', html_record.find('div', {'data-template': 'Partials/Teams/Summary'}).find('p').text.replace('Record:', '').strip()),
+        "current_record": re.sub('\s+', ' ', html_record.find('div', {'data-template': 'Partials/Teams/Summary'}).find('p').text.replace('Record:', '').strip()) if html_record else "",
         "playoff_appearances": re.sub('\s+', ' ', html_info.find_all('p')[6].text.replace('Playoff Appearances:', '').strip()),
         "championships": re.sub('\s+', ' ', html_info.find_all('p')[7].text.replace('Championships:', '').strip()),
         "all_seasons": new_nba_history,
@@ -151,7 +139,8 @@ def get_all_players_data(letter):
         players_dict = {}
         for row in rows:
             player_id = row.th['data-append-csv']
-            player_data = parse_data(row, ["player", "year_min", "year_max", "pos", "height", "weight", "birth_date", "colleges"])
+            player_data = parse_data(
+                row, ["player", "year_min", "year_max", "pos", "height", "weight", "birth_date", "colleges"])
             player_data['id'] = player_id
             players_dict[player_data["player"]] = player_data
         return players_dict
@@ -209,7 +198,7 @@ def get_player_data(player_id):
         return div_dict
 
     url = f'https://www.basketball-reference.com/players/{player_id[0]}/{player_id}.html'
-    
+
     try:
         soup = fetch_url_content(url)
     except Exception as e:
@@ -256,73 +245,91 @@ def get_player_data(player_id):
         "ft", "fta", "ft_pct", "orb", "drb", "trb", "ast", "stl", "blk", "tov", "pf", "pts", "DUMMY", "trp_dbl"]
 
     data = {}
-    
+
     try:
         data["image"] = get_image(soup)
     except Exception as e:
         logging.error(f"Error getting image: {e}")
 
     try:
-        data["per_game_regular_season"] = get_data(soup.find('table', {'id': 'per_game'}), data_stats_per_game)
+        data["per_game_regular_season"] = get_data(
+            soup.find('table', {'id': 'per_game'}), data_stats_per_game)
     except Exception as e:
         logging.error(f"Error getting per_game_regular_season data: {e}")
-    
+
     try:
-        data["per_game_playoff"] = get_data(soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game)
+        data["per_game_playoff"] = get_data(
+            soup.find('table', {'id': 'playoffs_per_game'}), data_stats_per_game)
     except Exception as e:
         logging.error(f"Error getting per_game_playoff data: {e}")
 
     try:
-        data["advanced_regular_season"] = get_data(soup.find('table', {'id': 'advanced'}), data_stats_advance)
+        data["advanced_regular_season"] = get_data(
+            soup.find('table', {'id': 'advanced'}), data_stats_advance)
     except Exception as e:
         logging.error(f"Error getting advanced_regular_season data: {e}")
 
     try:
-        data["advanced_regular_playoff"] = get_data(soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance)
+        data["advanced_regular_playoff"] = get_data(
+            soup.find('table', {'id': 'playoffs_advanced'}), data_stats_advance)
     except Exception as e:
         logging.error(f"Error getting advanced_regular_playoff data: {e}")
 
     try:
-        stats_tables_per_minute = get_and_cleanup_stats_table(soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
-        data["per_36_regular_season"] = stats_tables_per_minute.get('per_minute')
-        data["per_36_playoff"] = stats_tables_per_minute.get('playoffs_per_minute')
+        stats_tables_per_minute = get_and_cleanup_stats_table(
+            soup, 'all_per_minute-playoffs_per_minute', data_stats_per_minute)
+        data["per_36_regular_season"] = stats_tables_per_minute.get(
+            'per_minute')
+        data["per_36_playoff"] = stats_tables_per_minute.get(
+            'playoffs_per_minute')
     except Exception as e:
         logging.error(f"Error getting per_36 data: {e}")
 
     try:
-        stats_tables_per_poss = get_and_cleanup_stats_table(soup, 'all_per_poss-playoffs_per_poss', data_stats_per_poss)
+        stats_tables_per_poss = get_and_cleanup_stats_table(
+            soup, 'all_per_poss-playoffs_per_poss', data_stats_per_poss)
         data["per_100_regular_season"] = stats_tables_per_poss.get('per_poss')
-        data["per_100_playoff"] = stats_tables_per_poss.get('playoffs_per_poss')
+        data["per_100_playoff"] = stats_tables_per_poss.get(
+            'playoffs_per_poss')
     except Exception as e:
         logging.error(f"Error getting per_100 data: {e}")
 
     try:
-        stats_tables_all_adj_shooting = get_and_cleanup_stats_table(soup, 'all_adj_shooting', data_stat_adjusted_shooting, cleanup=True)
-        data["adjusted_shooting_regular_season"] = stats_tables_all_adj_shooting.get("adj_shooting")
+        stats_tables_all_adj_shooting = get_and_cleanup_stats_table(
+            soup, 'all_adj_shooting', data_stat_adjusted_shooting, cleanup=True)
+        data["adjusted_shooting_regular_season"] = stats_tables_all_adj_shooting.get(
+            "adj_shooting")
     except Exception as e:
         logging.error(f"Error getting adjusted_shooting data: {e}")
 
     try:
-        stats_tables_play_by_play = get_and_cleanup_stats_table(soup, 'all_pbp-playoffs_pbp', data_stats_play_by_play, cleanup=True)
-        data["play_by_play_regular_season"] = stats_tables_play_by_play.get("pbp")
-        data["play_by_play_playoff"] = stats_tables_play_by_play.get("playoffs_pbp")
+        stats_tables_play_by_play = get_and_cleanup_stats_table(
+            soup, 'all_pbp-playoffs_pbp', data_stats_play_by_play, cleanup=True)
+        data["play_by_play_regular_season"] = stats_tables_play_by_play.get(
+            "pbp")
+        data["play_by_play_playoff"] = stats_tables_play_by_play.get(
+            "playoffs_pbp")
     except Exception as e:
         logging.error(f"Error getting play_by_play data: {e}")
 
     try:
-        stats_tables_shooting = get_and_cleanup_stats_table(soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
+        stats_tables_shooting = get_and_cleanup_stats_table(
+            soup, 'all_shooting-playoffs_shooting', data_stats_shooting, cleanup=True)
         data["shooting_regular_season"] = stats_tables_shooting.get("shooting")
-        data["shooting_playoff"] = stats_tables_shooting.get("playoffs_shooting")
+        data["shooting_playoff"] = stats_tables_shooting.get(
+            "playoffs_shooting")
     except Exception as e:
         logging.error(f"Error getting shooting data: {e}")
 
     try:
-        data["totals_regular_season"] = get_data(soup.find('table', {'id': 'totals'}), data_stat_totals)
+        data["totals_regular_season"] = get_data(
+            soup.find('table', {'id': 'totals'}), data_stat_totals)
     except Exception as e:
         logging.error(f"Error getting totals_regular_season data: {e}")
 
     try:
-        data["totals_playoffs"] = get_data(soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals)
+        data["totals_playoffs"] = get_data(
+            soup.find('table', {'id': 'playoffs_totals'}), data_stat_totals)
     except Exception as e:
         logging.error(f"Error getting totals_playoffs data: {e}")
 
