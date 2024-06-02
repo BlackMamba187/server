@@ -7,9 +7,6 @@ from utilities.scrape import (get_active_teams, get_team_info, get_all_players_d
 app = Flask(__name__)
 CORS(app)
 
-# Set up Cache
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
-
 @app.route('/', methods=['GET'])
 def home():
     html_content = """
