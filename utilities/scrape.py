@@ -139,21 +139,21 @@ def get_all_players_data(letter):
         players_dict = {}
         for row in rows:
             player_id = row.th['data-append-csv']
-            player_data = parse_data(
-                row, ["player", "year_min", "year_max", "pos", "height", "weight", "birth_date", "colleges"])
+            player_data = parse_data(row, ["player", "year_min", "year_max", "pos", "height", "weight", "birth_date", "colleges"])
             player_data['id'] = player_id
             players_dict[player_data["player"]] = player_data
         return players_dict
 
     player_data = parse_players_table(html_players_table)
-    players_data[letter] = player_data
     return player_data
 
 # Fetch and parse player data for all letters
 def get_all_players_data_for_all_letters():
+    players_data = {}  # Initialize the dictionary here
     for letter in string.ascii_lowercase:
         print(f"Fetching data for players starting with '{letter}'...")
-        get_all_players_data(letter)
+        player_data = get_all_players_data(letter)
+        players_data[letter] = player_data
         time.sleep(3)
     return players_data
 

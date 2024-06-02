@@ -59,7 +59,6 @@ def home():
     """
     return render_template_string(html_content)
 
-
 @app.route('/seasonavg', methods=['GET'])
 def season_avg():
     data = get_season_avgs()
