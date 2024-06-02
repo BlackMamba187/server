@@ -1,6 +1,5 @@
 from flask import Flask, render_template_string
 from flask_cors import CORS
-from flask_caching import Cache
 
 from utilities.scrape import (get_active_teams, get_team_info, get_all_players_data, get_all_players_data_for_all_letters,
                               get_player_data, get_season_avgs)
@@ -65,34 +64,38 @@ def home():
 
 
 @app.route('/seasonavg', methods=['GET'])
-@cache.cached(timeout=86400) # data updates once a day
 def season_avg():
     data = get_season_avgs()
     return data
     
 @app.route('/activeteams', methods=['GET'])
-@cache.memoize() # data never updates
 def active_teams_json():
     data = get_active_teams()
     return data
 
 @app.route('/team/<team_id>', methods=['GET'])
-@cache.cached(timeout=86400) # data updates once a day
 def get_team_info_json(team_id):
     data = get_team_info(team_id)
     return data
 
 @app.route('/players/', methods=['GET'])
-@cache.memoize() # data never updates
 def get_all_players_data_for_all_letters_json():
     data = get_all_players_data_for_all_letters()
     return data
 
 @app.route('/player/<player_id>', methods=['GET'])
-@cache.cached(timeout=86400) # data updates once a day
 def get_player_data_json(player_id):
     data = get_player_data(player_id)
     return data
+
+@app.route('/players/batch', methods=['POST'])
+def get_player_data_batch():
+    player_ids = request.json.get('player_ids', [])
+    results = {}
+    for player_id in player_ids:
+        player_data = get_player_data(player_id)
+        results[player_id] = player_data
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(debug=True)
